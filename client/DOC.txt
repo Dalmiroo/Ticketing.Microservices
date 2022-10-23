@@ -1,0 +1,1 @@
+you can find TEST DOCUMENTATION FOR STRIPE IN stripe.com/docs/testing for fake credit card numbers

@@ -1,0 +1,44 @@
+import express from 'express';
+import 'express-async-errors';
+import {json} from 'body-parser';
+import cookieSession from 'cookie-session';
+import {errorHandler, NotFoundError, currentUser} from '@dsfticketing/common'
+import { createTicketRouter } from './routes/new';
+import { showTicketRouter } from './routes/show';
+import { indexTicketRouter } from './routes';
+import { updateTicketRouter } from './routes/update';
+
+const app = express();
+
+//traffic is being proxyed to our app through ingress-nginx, express is gonna see the fact 
+//that stuff is being proxyed and by default express is gonna say hey wait theres a proxy here
+//i dont trust this https connection 
+//with this express is aware that is behind a proxy of ingress-nginx and to make sure that it should still
+//trust traffic as being secure even though its coming from that proxy
+app.set('trust proxy', true); 
+
+app.use(json());
+app.use(
+  cookieSession ({
+     //disable encryption into this cookie (jwt already encrypted)
+     signed: false,
+     secure: process.env.NODE_ENV !== 'test'
+  })
+  );
+//cookie session has to run first so so it can take a look at the cookie and set the
+//req.session property, otherwise req.session will not be set.
+  app.use(currentUser)
+
+app.use(createTicketRouter);
+app.use(showTicketRouter);
+app.use(indexTicketRouter);
+app.use(updateTicketRouter);
+
+app.get('*', () => {
+  throw new NotFoundError;
+});
+
+
+app.use(errorHandler);
+
+export { app };

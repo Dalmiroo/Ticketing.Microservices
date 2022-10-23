@@ -1,0 +1,49 @@
+# to get an image loaded up into our k8s cluster, to get that image running we create this file.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tickets-depl
+spec: #number of pods that we want to run
+  replicas: 1
+  selector: #the purpose of the selector is going to be
+    #tell the deployment how to find all the pods that is going to create
+    matchLabels:
+      app: tickets
+  template: #how to create each individual pod
+    metadata:
+      labels:
+        app: tickets
+    spec: #tell the pod how to behave
+      containers:
+        - name: tickets #login purposes
+          image: dalmiroo/tickets
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: 'ticketing'
+            - name: MONGO_URI
+              value: 'mongodb://tickets-mongo-srv:27017/tickets'
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+---
+#config for our service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tickets-srv
+spec:
+  selector: #tells the service how to find the set of pods that is supposed to govern access to
+    app: tickets
+  ports:
+    - name: tickets
+      protocol: TCP
+      port: 3000 #auth srv running in port 3000
+      targetPort: 3000

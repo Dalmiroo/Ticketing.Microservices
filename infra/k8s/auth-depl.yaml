@@ -1,0 +1,41 @@
+# to get an image loaded up into our k8s cluster, to get that image running we create this file.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-depl
+spec: #number of pods that we want to run
+  replicas: 1
+  selector: #the purpose of the selector is going to be
+    #tell the deployment how to find all the pods that is going to create
+    matchLabels:
+      app: auth
+  template: #how to create each individual pod
+    metadata:
+      labels:
+        app: auth
+    spec: #tell the pod how to behave
+      containers:
+        - name: auth #login purposes
+          image: dalmiroo/auth
+          env:
+            - name: MONGO_URI
+              value: 'mongodb://auth-mongo-srv:27017/auth'
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+---
+#config for our service
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-srv
+spec:
+  selector: #tells the service how to find the set of pods that is supposed to govern access to
+    app: auth
+  ports:
+    - name: auth
+      protocol: TCP
+      port: 3000 #auth srv running in port 3000
+      targetPort: 3000

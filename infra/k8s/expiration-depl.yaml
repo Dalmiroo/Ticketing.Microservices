@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expiration-depl
+spec: #number of pods that we want to run
+  replicas: 1
+  selector: #the purpose of the selector is going to be
+    #tell the deployment how to find all the pods that is going to create
+    matchLabels:
+      app: expiration
+  template: #how to create each individual pod
+    metadata:
+      labels:
+        app: expiration
+    spec: #tell the pod how to behave
+      containers:
+        - name: expiration #login purposes
+          image: dalmiroo/expiration
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: 'ticketing'
+            - name: REDIS_HOST
+              value: expiration-redis-srv

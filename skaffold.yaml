@@ -1,0 +1,58 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy: #list all the config files we want to load to our cluster
+  kubectl:
+    manifests:
+      - ./infra/k8s/*
+build:
+  local:
+    push: false #whenever we build an image, dont try to push it off to dockerhub (that is the default behavior)
+  artifacts: #all the things that are going to be built
+    - image: dalmiroo/auth
+      context: auth
+      docker:
+        dockerfile: Dockerfile
+      sync: #tells skaffold how to handle any files that change
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+    - image: dalmiroo/client
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync: #tells skaffold how to handle any files that change
+        manual:
+          - src: '**/*.js'
+            dest: .
+    - image: dalmiroo/tickets
+      context: tickets
+      docker:
+        dockerfile: Dockerfile
+      sync: #tells skaffold how to handle any files that change
+        manual:
+          - src: 'src/**/*.ts' #sync all inside the src directory
+            dest: .
+    - image: dalmiroo/orders
+      context: orders
+      docker:
+        dockerfile: Dockerfile
+      sync: #tells skaffold how to handle any files that change
+        manual:
+          - src: 'src/**/*.ts' #sync all inside the src directory
+            dest: .
+    - image: dalmiroo/expiration
+      context: expiration
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+    - image: dalmiroo/payments
+      context: payments
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
